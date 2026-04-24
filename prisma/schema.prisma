@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Университет ───
+model University {
+  id          Int       @id @default(autoincrement())
+  name        String    // Краткое название: "ЮКУ им. Ауэзова"
+  fullName    String    // Полное название
+  city        String    @default("Шымкент")
+  avatar      String    @default("🏛️")
+  color       String    @default("#3B82F6")
+  minScore    Int       @default(70)
+  hasDormitory Boolean  @default(false)
+  hasMilitary  Boolean  @default(false)
+
+  // Контакты
+  instagram   String?
+  website     String?
+  phone       String?
+  whatsapp    String?
+
+  // Связи
+  addresses   Address[]
+  directions  Direction[]
+  favorites   Favorite[]
+  analytics   AnalyticsEvent[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ─── Адреса / Корпуса ───
+model Address {
+  id           Int        @id @default(autoincrement())
+  name         String     // "Главный корпус", "Корпус №2"
+  address      String     // "пр. Тауке хана, 5"
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+}
+
+// ─── Направление (IT, Медицина, Юриспруденция...) ───
+model Direction {
+  id           Int        @id @default(autoincrement())
+  name         String     // "Информационные технологии"
+  icon         String     @default("📁")
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  specialties  Specialty[]
+}
+
+// ─── Специальность ───
+model Specialty {
+  id          Int       @id @default(autoincrement())
+  code        String    // "6B06101"
+  name        String    // "Информатика"
+  minScore    Int       @default(70)
+  grant       Boolean   @default(false)
+  price       Int?      // Стоимость в тенге/год
+  directionId Int
+  direction   Direction @relation(fields: [directionId], references: [id], onDelete: Cascade)
+}
+
+// ─── Пользователь (из Telegram) ───
+model User {
+  id           Int        @id @default(autoincrement())
+  telegramId   BigInt     @unique
+  username     String?
+  firstName    String?
+  lastName     String?
+  phone        String?
+  city         String     @default("Шымкент")
+  favorites    Favorite[]
+  createdAt    DateTime   @default(now())
+}
+
+// ─── Избранное ───
+model Favorite {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, universityId])
+}
+
+// ─── Аналитика ───
+model AnalyticsEvent {
+  id           Int        @id @default(autoincrement())
+  type         String     // "view", "click_instagram", "click_website", "click_whatsapp", "click_phone", "click_2gis"
+  universityId Int
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  userId       Int?       // Telegram user ID (optional)
+  createdAt    DateTime   @default(now())
+
+  @@index([universityId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ─── Админ ───
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // В реальном проекте — bcrypt hash
+  name      String
+  role      String   @default("admin") // "superadmin" | "admin"
+  createdAt DateTime @default(now())
+}
+
