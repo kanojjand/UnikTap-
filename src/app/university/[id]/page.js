@@ -1,10 +1,12 @@
 "use client";
 
+import { useTelegram } from "@/app/useTelegram";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 
 export default function UniversityPage() {
+  const { user, isFavorite, toggleFavorite } = useTelegram();
   const router = useRouter();
   const params = useParams();
   const [uni, setUni] = useState(null);
@@ -64,7 +66,15 @@ export default function UniversityPage() {
       >
         <button
           onClick={() => router.back()}
+          
           className="w-9 h-9 rounded-[10px] bg-white/15 flex items-center justify-center border-none cursor-pointer"
+          {/* Кнопка избранного */}
+          <button
+            onClick={() => user && toggleFavorite(uni?.id)}
+            className="absolute top-5 right-4 w-9 h-9 rounded-[10px] bg-white/15 flex items-center justify-center border-none cursor-pointer text-xl"
+          >
+            {user && uni && isFavorite(uni.id) ? "⭐" : "☆"}
+          </button>
         >
           <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">
             <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
